@@ -2,8 +2,8 @@
   functions = "netlify/functions"
   publish = "."
 
-[functions]
-  node_bundler = "esbuild"
+[functions."*"]
+  external_node_modules = ["@netlify/blobs"]
 
 [[redirects]]
   from = "/api/submit-ballot"
