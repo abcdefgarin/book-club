@@ -2,7 +2,15 @@
   functions = "netlify/functions"
   publish = "."
 
+[functions]
+  node_bundler = "esbuild"
+
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/submit-ballot"
+  to = "/.netlify/functions/submit-ballot"
+  status = 200
+
+[[redirects]]
+  from = "/api/get-ballots"
+  to = "/.netlify/functions/get-ballots"
   status = 200
