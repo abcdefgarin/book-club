@@ -3,7 +3,8 @@
   publish = "."
 
 [functions."*"]
-  external_node_modules = ["@netlify/blobs"]
+  node_bundler = "esbuild"
+  external = ["@netlify/blobs"]
 
 [[redirects]]
   from = "/api/submit-ballot"
