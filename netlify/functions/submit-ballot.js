@@ -1,39 +1,45 @@
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
-export default async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method not allowed" };
   }
 
   let ballot;
   try {
-    ballot = await req.json();
+    ballot = JSON.parse(event.body);
   } catch {
-    return new Response("Invalid JSON", { status: 400 });
+    return { statusCode: 400, body: "Invalid JSON" };
   }
 
   const { name, selections } = ballot;
 
   if (!name || !Array.isArray(selections) || selections.length === 0) {
-    return new Response("Missing name or selections", { status: 400 });
+    return { statusCode: 400, body: "Missing name or selections" };
   }
 
-  const store = getStore("ballots");
+  try {
+    const store = getStore({
+      name: "ballots",
+      consistency: "strong",
+    });
 
-  // Use lowercase name as key so same person can't double-submit under
-  // different capitalization. Overwrites if they resubmit.
-  const key = name.trim().toLowerCase().replace(/\s+/g, "-");
+    const key = name.trim().toLowerCase().replace(/\s+/g, "-");
 
-  await store.setJSON(key, {
-    name: name.trim(),
-    selections,           // array of { rank, title, author }
-    submittedAt: new Date().toISOString(),
-  });
+    await store.setJSON(key, {
+      name: name.trim(),
+      selections,
+      submittedAt: new Date().toISOString(),
+    });
 
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: true }),
+    };
+  } catch (err) {
+    console.error("Blobs error:", err);
+    return { statusCode: 500, body: "Storage error: " + err.message };
+  }
 };
 
-export const config = { path: "/api/submit-ballot" };
